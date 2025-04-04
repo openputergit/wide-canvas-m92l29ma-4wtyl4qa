@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XL Quant - Crypto Quantitative Trading Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        .hover-scale {
+            transition: transform 0.2s;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .chart-container {
+            height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+        .trading-card {
+            transition: all 0.3s ease;
+        }
+        .trading-card:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .trade-line {
+            position: absolute;
+            height: 100%;
+            width: 1px;
+            background: rgba(59, 130, 246, 0.5);
+        }
+        .price-point {
+            position: absolute;
+            height: 6px;
+            width: 6px;
+            background: #3b82f6;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .ticker-tape {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-tape-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <nav class="border-b border-gray-800 px-4 py-4 sticky top-0 z-50 bg-opacity-95 backdrop-blur-sm" style="background-color: rgba(15, 23, 42, 0.95);">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="text-2xl font-bold mr-2">XL<span class="text-blue-500">Quant</span></div>
+                <span class="bg-blue-600 text-xs px-2 py-1 rounded-md">BETA</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-house-door mr-1"></i> Home</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-graph-up mr-1"></i> Markets</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-currency-exchange mr-1"></i> Trading</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-bar-chart mr-1"></i> Analytics</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-gear mr-1"></i> Settings</button>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button class="hidden md:block border border-blue-500 hover:bg-blue-500/20 px-4 py-1.5 rounded-lg transition text-sm">
+                    Download App
+                </button>
+                <button id="connectWallet" class="bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition text-sm">
+                    Connect Wallet
+                </button>
+                <button id="mobileMenuBtn" class="md:hidden text-xl">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+        <div id="mobileMenu" class="md:hidden hidden container mx-auto mt-4 pb-2">
+            <div class="flex flex-col space-y-3">
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-house-door mr-2"></i> Home</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-graph-up mr-2"></i> Markets</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-currency-exchange mr-2"></i> Trading</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-bar-chart mr-2"></i> Analytics</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-gear mr-2"></i> Settings</button>
+                <button class="hover:text-blue-400 transition flex items-center"><i class="bi bi-download mr-2"></i> Download App</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="ticker-tape bg-blue-900/30 py-2 border-b border-blue-800">
+        <div class="ticker-tape-content">
+            <span class="px-3">BTC: $60,123.45 <span class="text-green-400">+2.3%</span></span>
+            <span class="px-3">ETH: $3,045.67 <span class="text-green-400">+1.8%</span></span>
+            <span class="px-3">BNB: $412.34 <span class="text-green-400">+0.5%</span></span>
+            <span class="px-3">SOL: $124.56 <span class="text-red-400">-0.7%</span></span>
+            <span class="px-3">XRP: $0.548 <span class="text-green-400">+1.2%</span></span>
+            <span class="px-3">ADA: $0.385 <span class="text-red-400">-0.3%</span></span>
+            <span class="px-3">DOGE: $0.078 <span class="text-green-400">+5.3%</span></span>
+            <span class="px-3">DOT: $6.74 <span class="text-green-400">+0.9%</span></span>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div class="space-y-6">
+                <h1 class="text-4xl font-bold">Professional Crypto<br>Quantitative Trading</h1>
+                <p class="text-gray-300 text-lg">Leverage AI-powered algorithms with advanced risk management to maximize your returns</p>
+                <div class="flex space-x-4">
+                    <button id="startTradingBtn" class="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg transition flex items-center">
+                        <i class="bi bi-lightning-charge mr-2"></i> Start Trading
+                    </button>
+                    <button class="border border-blue-600 hover:bg-blue-600/20 px-8 py-3 rounded-lg transition">
+                        Learn More
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-4 mt-6">
+                    <div class="flex items-center text-gray-300">
+                        <i class="bi bi-shield-check text-blue-400 mr-2"></i>
+                        <span>Bank-level Security</span>
+                    </div>
+                    <div class="flex items-center text-gray-300">
+                        <i class="bi bi-lightning text-blue-400 mr-2"></i>
+                        <span>High-frequency Trading</span>
+                    </div>
+                    <div class="flex items-center text-gray-300">
+                        <i class="bi bi-robot text-blue-400 mr-2"></i>
+                        <span>AI-powered Strategies</span>
+                    </div>
+                </div>
+            </div>
+            <div class="rounded-xl bg-gray-800/50 p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-700/50 p-4 rounded-lg hover-scale">
+                        <h3 class="text-xl font-semibold mb-2">24h Volume</h3>
+                        <p class="text-blue-400 text-2xl">$2.4B</p>
+                        <p class="text-green-400 text-sm">+15% from yesterday</p>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg hover-scale">
+                        <h3 class="text-xl font-semibold mb-2">Active Strategies</h3>
+                        <p class="text-blue-400 text-2xl">24</p>
+                        <p class="text-green-400 text-sm">5 new this week</p>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg hover-scale">
+                        <h3 class="text-xl font-semibold mb-2">Total Users</h3>
+                        <p class="text-blue-400 text-2xl">25K+</p>
+                        <p class="text-green-400 text-sm">Growing rapidly</p>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg hover-scale">
+                        <h3 class="text-xl font-semibold mb-2">Success Rate</h3>
+                        <p class="text-blue-400 text-2xl">92%</p>
+                        <p class="text-green-400 text-sm">Industry leading</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Top Performing Strategies</h2>
+                <button class="text-blue-400 hover:text-blue-300 transition flex items-center">
+                    View All <i class="bi bi-chevron-right ml-1"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-800/50 rounded-xl p-6 hover-scale trading-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <div class="rounded-full bg-blue-500/20 p-2 mr-3">
+                                <i class="bi bi-grid text-blue-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Grid Trading</h3>
+                        </div>
+                        <span class="text-green-400 flex items-center"><i class="bi bi-arrow-up-right mr-1"></i>+23.5%</span>
+                    </div>
+                    <div class="chart-container mb-4">
+                        <!-- Simplified chart visualization -->
+                        <div class="w-full h-full bg-gray-900/50 rounded-lg relative overflow-hidden">
+                            <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-blue-500/10"></div>
+                            <div class="trade-line" style="left: 20%;"></div>
+                            <div class="trade-line" style="left: 40%;"></div>
+                            <div class="trade-line" style="left: 60%;"></div>
+                            <div class="trade-line" style="left: 80%;"></div>
+                            <div class="price-point" style="left: 10%; top: 60%;"></div>
+                            <div class="price-point" style="left: 20%; top: 50%;"></div>
+                            <div class="price-point" style="left: 30%; top: 55%;"></div>
+                            <div class="price-point" style="left: 40%; top: 45%;"></div>
+                            <div class="price-point" style="left: 50%; top: 40%;"></div>
+                            <div class="price-point" style="left: 60%; top: 30%;"></div>
+                            <div class="price-point" style="left: 70%; top: 35%;"></div>
+                            <div class="price-point" style="left: 80%; top: 25%;"></div>
+                            <div class="price-point" style="left: 90%; top: 20%;"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mb-4">Automated buy/sell orders at regular price intervals, maximizing profits in sideways markets.</p>
+                    <div class="flex justify-between items-center text-sm mb-4">
+                        <span class="text-gray-400">Risk Level: <span class="text-yellow-400">Medium</span></span>
+                        <span class="text-gray-400">Min Deposit: <span class="text-white">$500</span></span>
+                    </div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg transition flex items-center justify-center">
+                        <i class="bi bi-play-fill mr-2"></i> Deploy Strategy
+                    </button>
+                </div>
+                
+                <div class="bg-gray-800/50 rounded-xl p-6 hover-scale trading-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <div class="rounded-full bg-green-500/20 p-2 mr-3">
+                                <i class="bi bi-currency-exchange text-green-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Market Making</h3>
+                        </div>
+                        <span class="text-green-400 flex items-center"><i class="bi bi-arrow-up-right mr-1"></i>+18.7%</span>
+                    </div>
+                    <div class="chart-container mb-4">
+                        <!-- Simplified chart visualization -->
+                        <div class="w-full h-full bg-gray-900/50 rounded-lg relative overflow-hidden">
+                            <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-green-500/10"></div>
+                            <div class="trade-line" style="left: 25%;"></div>
+                            <div class="trade-line" style="left: 50%;"></div>
+                            <div class="trade-line" style="left: 75%;"></div>
+                            <div class="price-point" style="left: 5%; top: 55%;"></div>
+                            <div class="price-point" style="left: 15%; top: 45%;"></div>
+                            <div class="price-point" style="left: 25%; top: 50%;"></div>
+                            <div class="price-point" style="left: 35%; top: 40%;"></div>
+                            <div class="price-point" style="left: 45%; top: 45%;"></div>
+                            <div class="price-point" style="left: 55%; top: 35%;"></div>
+                            <div class="price-point" style="left: 65%; top: 40%;"></div>
+                            <div class="price-point" style="left: 75%; top: 30%;"></div>
+                            <div class="price-point" style="left: 85%; top: 35%;"></div>
+                            <div class="price-point" style="left: 95%; top: 25%;"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mb-4">Provide liquidity and earn from bid-ask spreads with optimized position sizing and rebalancing.</p>
+                    <div class="flex justify-between items-center text-sm mb-4">
+                        <span class="text-gray-400">Risk Level: <span class="text-green-400">Low</span></span>
+                        <span class="text-gray-400">Min Deposit: <span class="text-white">$1,000</span></span>
+                    </div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg transition flex items-center justify-center">
+                        <i class="bi bi-play-fill mr-2"></i> Deploy Strategy
+                    </button>
+                </div>
+                
+                <div class="bg-gray-800/50 rounded-xl p-6 hover-scale trading-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <div class="rounded-full bg-purple-500/20 p-2 mr-3">
+                                <i class="bi bi-graph-up-arrow text-purple-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Trend Following</h3>
+                        </div>
+                        <span class="text-green-400 flex items-center"><i class="bi bi-arrow-up-right mr-1"></i>+29.3%</span>
+                    </div>
+                    <div class="chart-container mb-4">
+                        <!-- Simplified chart visualization -->
+                        <div class="w-full h-full bg-gray-900/50 rounded-lg relative overflow-hidden">
+                            <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-purple-500/10"></div>
+                            <div class="price-point" style="left: 5%; top: 70%;"></div>
+                            <div class="price-point" style="left: 15%; top: 65%;"></div>
+                            <div class="price-point" style="left: 25%; top: 60%;"></div>
+                            <div class="price-point" style="left: 35%; top: 55%;"></div>
+                            <div class="price-point" style="left: 45%; top: 50%;"></div>
+                            <div class="price-point" style="left: 55%; top: 40%;"></div>
+                            <div class="price-point" style="left: 65%; top: 35%;"></div>
+                            <div class="price-point" style="left: 75%; top: 30%;"></div>
+                            <div class="price-point" style="left: 85%; top: 20%;"></div>
+                            <div class="price-point" style="left: 95%; top: 15%;"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 mb-4">Capitalize on sustained market movements using advanced machine learning algorithms.</p>
+                    <div class="flex justify-between items-center text-sm mb-4">
+                        <span class="text-gray-400">Risk Level: <span class="text-red-400">High</span></span>
+                        <span class="text-gray-400">Min Deposit: <span class="text-white">$2,000</span></span>
+                    </div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg transition flex items-center justify-center">
+                        <i class="bi bi-play-fill mr-2"></i> Deploy Strategy
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Market Overview</h2>
+                <div class="flex space-x-2">
+                    <button class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-sm">24h</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-sm">7d</button>
+                    <button class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-sm">30d</button>
+                    <button class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-sm">1y</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800/50 rounded-xl">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="py-4 px-6 text-left">Asset</th>
+                            <th class="py-4 px-6 text-right">Price</th>
+                            <th class="py-4 px-6 text-right">24h Change</th>
+                            <th class="py-4 px-6 text-right">7d Change</th>
+                            <th class="py-4 px-6 text-right">Market Cap</th>
+                            <th class="py-4 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-orange-400 flex items-center justify-center mr-3">BTC</div>
+                                    <div>
+                                        <div class="font-medium">Bitcoin</div>
+                                        <div class="text-gray-400 text-sm">BTC</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-right">$60,123.45</td>
+                            <td class="py-4 px-6 text-right text-green-400">+2.3%</td>
+                            <td class="py-4 px-6 text-right text-green-400">+5.7%</td>
+                            <td class="py-4 px-6 text-right">$1.17T</td>
+                            <td class="py-4 px-6 text-right">
+                                <button class="bg-blue-600 hover:bg-blue-700 px-4 py-1 rounded-lg text-sm">Trade</button>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center mr-3">ETH</div>
+                                    <div>
+                                        <div class="font-medium">Ethereum</div>
+                                        <div class="text-gray-400 text-sm">ETH</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-right">$3,045.67</td>
+                            <td class="py-4 px-6 text-right text-green-400">+1.8%</td>
+                            <td class="py-4 px-6 text-right text-green-400">+3.2%</td>
+                            <td class="py-4 px-6 text-right">$366.2B</td>
+                            <td class="py-4 px-6 text-right">
+                                <button class="bg-blue-600 hover:bg-blue-700 px-4 py-1 rounded-lg text-sm">Trade</button>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center mr-3">BNB</div>
+                                    <div>
+                                        <div class="font-medium">Binance Coin</div>
+                                        <div class="text-gray-400 text-sm">BNB</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-right">$412.34</td>
+                            <td class="py-4 px-6 text-right text-green-400">+0.5%</td>
+                            <td class="py-4 px-6 text-right text-red-400">-1.2%</td>
+                            <td class="py-4 px-6 text-right">$63.4B</td>
+                            <td class="py-4 px-6 text-right">
+                                <button class="bg-blue-600 hover:bg-blue-700 px-4 py-1 rounded-lg text-sm">Trade</button>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-purple-400 flex items-center justify-center mr-3">SOL</div>
+                                    <div>
+                                        <div class="font-medium">Solana</div>
+                                        <div class="text-gray-400 text-sm">SOL</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-right">$124.56</td>
+                            <td class="py-4 px-6 text-right text-red-400">-0.7%</td>
+                            <td class="py-4 px-6 text-right text-green-400">+8.3%</td>
+                            <td class="py-4 px-6 text-right">$53.8B</td>
+                            <td class="py-4 px-6 text-right">
+                                <button class="bg-blue-600 hover:bg-blue-700 px-4 py-1 rounded-lg text-sm">Trade</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold mb-6">Why Choose XLQuant</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-800/50 rounded-xl p-6 hover-scale">
+                    <div class="rounded-full bg-blue-500/20 p-4 inline-block mb-4">
+                        <i class="bi bi-shield-lock text-3xl text-blue-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Security First</h3>
+                    <p class="text-gray-300">Bank-grade encryption and multi-signature technology to protect your assets at all times.</p>
+                </div>
+                <div class="bg-gray-800/50 rounded-xl p-6 hover-scale">
+                    <div class="rounded-full bg-green-500/20 p-4 inline-block mb-4">
+                        <i class="bi bi-robot text-3xl text-green-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">AI-Powered</h3>
+                    <p class="text-gray-300">Advanced machine learning algorithms that continuously adapt to market conditions.</p>
+                </div>
+                <div class="bg-gray-800/50 rounded-xl p-6 hover-scale">
+                    <div class="rounded-full bg-purple-500/20 p-4 inline-block mb-4">
+                        <i class="bi bi-graph-up-arrow text-3xl text-purple-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Proven Results</h3>
+                    <p class="text-gray-300">Over 92% success rate with our strategies, backed by transparency and real-time reporting.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <div class="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4">Get Started Today</h2>
+                        <p class="text-gray-300 mb-6">Download our mobile app to trade anywhere, anytime with our professional quantitative strategies.</p>
+                        <div class="flex flex-wrap gap-4">
+                            <button class="bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-lg transition flex items-center">
+                                <i class="bi bi-apple text-2xl mr-2"></i>
+                                <div class="text-left">
+                                    <div class="text-xs">Download on the</div>
+                                    <div class="font-medium">App Store</div>
+                                </div>
+                            </button>
+                            <button class="bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-lg transition flex items-center">
+                                <i class="bi bi-google-play text-2xl mr-2"></i>
+                                <div class="text-left">
+                                    <div class="text-xs">Get it on</div>
+                                    <div class="font-medium">Google Play</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <div class="bg-gray-800 rounded-xl p-4 shadow-lg relative">
+                            <div class="absolute -top-2 -right-2 bg-blue-600 text-xs px-2 py-1 rounded-md">NEW</div>
+                            <img src="https://source.unsplash.com/random/340x550/?crypto-app" alt="Mobile App" class="rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-bold mb-4">XL<span class="text-blue-500">Quant</span></div>
+                    <p class="text-gray-400 mb-4">Professional crypto quantitative trading platform with AI-powered strategies.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-telegram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-discord"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition"><i class="bi bi-medium"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Products</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Strategies</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Mobile App</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">API Access</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Enterprise Solutions</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Documentation</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Knowledge Base</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Community Forum</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Contact</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-500 text-sm mb-4 md:mb-0">© 2023 XLQuant. All rights reserved.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-500 hover:text-white transition text-sm">Privacy Policy</a>
+                        <a href="#" class="text-gray-500 hover:text-white transition text-sm">Terms of Service</a>
+                        <a href="#" class="text-gray-500 hover:text-white transition text-sm">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile App Download Modal -->
+    <div id="downloadModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-xl max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Download Our App</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-white">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <p class="text-gray-300 mb-6">Scan the QR code below to download our mobile app and trade on the go.</p>
+            <div class="flex justify-center mb-6">
+                <div class="bg-white p-4 rounded-lg">
+                    <!-- Placeholder for QR code -->
+                    <div class="w-48 h-48 bg-gray-200 flex items-center justify-center">
+                        <i class="bi bi-qr-code text-gray-800 text-5xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col space-y-3">
+                <button class="bg-gray-700 hover:bg-gray-600 py-3 rounded-lg transition flex items-center justify-center">
+                    <i class="bi bi-apple text-2xl mr-2"></i>
+                    <div class="text-left">
+                        <div class="text-xs">Download on the</div>
+                        <div class="font-medium">App Store</div>
+                    </div>
+                </button>
+                <button class="bg-gray-700 hover:bg-gray-600 py-3 rounded-lg transition flex items-center justify-center">
+                    <i class="bi bi-google-play text-2xl mr-2"></i>
+                    <div class="text-left">
+                        <div class="text-xs">Get it on</div>
+                        <div class="font-medium">Google Play</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Connection Modal -->
+    <div id="walletModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-xl max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Connect Wallet</h3>
+                <button id="closeWalletModalBtn" class="text-gray-400 hover:text-white">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <p class="text-gray-300 mb-6">Choose a wallet to connect to our platform:</p>
+            <div class="space-y-3">
+                <button id="connectMetaMask" class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg transition flex items-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" class="w-8 h-8 mr-4" />
+                    <span>MetaMask</span>
+                </button>
+                <button class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg transition flex items-center">
+                    <img src="https://cryptologos.cc/logos/walletconnect-wc-logo.png" alt="WalletConnect" class="w-8 h-8 mr-4" />
+                    <span>WalletConnect</span>
+                </button>
+                <button class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg transition flex items-center">
+                    <img src="https://coinbase.com/favicon.ico" alt="Coinbase Wallet" class="w-8 h-8 mr-4" />
+                    <span>Coinbase Wallet</span>
+                </button>
+                <button class="w-full bg-gray-700 hover:bg-gray-600 p-4 rounded-lg transition flex items-center">
+                    <img src="https://trustwallet.com/assets/images/favicon.png" alt="Trust Wallet" class="w-8 h-8 mr-4" />
+                    <span>Trust Wallet</span>
+                </button>
+            </div>
+            <p class="text-gray-400 text-sm mt-6">
+                By connecting your wallet, you agree to our Terms of Service and Privacy Policy.
+            </p>
+        </div>
+    </div>
+
+    <!-- Strategy Deployment Modal -->
+    <div id="strategyModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-xl max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Deploy Strategy</h3>
+                <button id="closeStrategyModalBtn" class="text-gray-400 hover:text-white">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <p class="text-gray-300 mb-6">Configure your trading strategy parameters:</p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-gray-400 mb-2">Trading Pair</label>
+                    <select class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3">
+                        <option>BTC/USDT</option>
+                        <option>ETH/USDT</option>
+                        <option>BNB/USDT</option>
+                        <option>SOL/USDT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Investment Amount</label>
+                    <div class="relative">
+                        <input type="text" value="1000" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 pl-12">
+                        <span class="absolute left-3 top-3 text-gray-400">USDT</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Risk Level</label>
+                    <div class="flex">
+                        <button class="flex-1 bg-gray-700 hover:bg-green-600 py-2 rounded-l-lg transition">Low</button>
+                        <button class="flex-1 bg-yellow-600 hover:bg-yellow-700 py-2 transition">Medium</button>
+                        <button class="flex-1 bg-gray-700 hover:bg-red-600 py-2 rounded-r-lg transition">High</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Take Profit</label>
+                    <input type="range" min="5" max="50" value="15" class="w-full">
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span>5%</span>
+                        <span>15%</span>
+                        <span>50%</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-2">Stop Loss</label>
+                    <input type="range" min="1" max="20" value="5" class="w-full">
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span>1%</span>
+                        <span>5%</span>
+                        <span>20%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-900/50 p-4 rounded-lg mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-400">Estimated Daily Profit:</span>
+                    <span class="text-green-400">0.5% - 2.1%</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Platform Fee:</span>
+                    <span>2%</span>
+                </div>
+            </div>
+            
+            <button id="deployBtn" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg transition flex items-center justify-center">
+                Deploy Strategy
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Wallet connection modal
+        document.getElementById('connectWallet').addEventListener('click', function() {
+            document.getElementById('walletModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeWalletModalBtn').addEventListener('click', function() {
+            document.getElementById('walletModal').classList.add('hidden');
+        });
+
+        // Connect MetaMask functionality
+        document.getElementById('connectMetaMask').addEventListener('click', async function() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Show connecting indicator
+                    this.innerHTML = '<div class="loader"></div> Connecting...';
+                    
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    
+                    if (accounts.length > 0) {
+                        const shortenedAddress = `${accounts[0].substr(0, 6)}...${accounts[0].substr(-4)}`;
+                        document.getElementById('connectWallet').innerHTML = shortenedAddress;
+                        document.getElementById('walletModal').classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error connecting wallet:', error);
+                    this.innerHTML = 'MetaMask';
+                    alert('Failed to connect wallet. Please try again.');
+                }
+            } else {
+                alert('Please install MetaMask to use this feature!');
+            }
+        });
+
+        // Download app modal
+        const downloadButtons = document.querySelectorAll('button:not([id])');
+        downloadButtons.forEach(button => {
+            if (button.textContent.includes('Download') || button.textContent.includes('App Store') || button.textContent.includes('Google Play')) {
+                button.addEventListener('click', function() {
+                    document.getElementById('downloadModal').classList.remove('hidden');
+                });
+            }
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('downloadModal').classList.add('hidden');
+        });
+
+        // Strategy deployment modal
+        document.getElementById('startTradingBtn').addEventListener('click', function() {
+            document.getElementById('strategyModal').classList.remove('hidden');
+        });
+
+        const deployStrategyBtns = document.querySelectorAll('button');
+        deployStrategyBtns.forEach(button => {
+            if (button.textContent.includes('Deploy Strategy')) {
+                button.addEventListener('click', function() {
+                    document.getElementById('strategyModal').classList.remove('hidden');
+                });
+            }
+        });
+
+        document.getElementById('closeStrategyModalBtn').addEventListener('click', function() {
+            document.getElementById('strategyModal').classList.add('hidden');
+        });
+
+        document.getElementById('deployBtn').addEventListener('click', function() {
+            this.innerHTML = '<div class="loader"></div> Deploying...';
+            setTimeout(() => {
+                document.getElementById('strategyModal').classList.add('hidden');
+                this.innerHTML = 'Deploy Strategy';
+                alert('Strategy successfully deployed! You can monitor its performance in the dashboard.');
+            }, 2000);
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const modals = [
+                { element: document.getElementById('downloadModal'), content: document.querySelector('#downloadModal > div') },
+                { element: document.getElementById('walletModal'), content: document.querySelector('#walletModal > div') },
+                { element: document.getElementById('strategyModal'), content: document.querySelector('#strategyModal > div') }
+            ];
+            
+            modals.forEach(modal => {
+                if (event.target === modal.element) {
+                    modal.element.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
